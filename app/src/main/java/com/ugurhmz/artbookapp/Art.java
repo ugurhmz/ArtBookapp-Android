@@ -3,14 +3,12 @@ package com.ugurhmz.artbookapp;
 
 
 public class Art {
+    String name;
+    int id;
 
-    public String name;
-    public int id;
-
-
-    public Art(int id, String name) {
-        this.id = id;
+    public Art(String name, int id) {
         this.name = name;
-
+        this.id = id;
     }
 }
+

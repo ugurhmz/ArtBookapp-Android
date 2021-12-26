@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ArtBookapp">
         <activity
-            android:name=".ArtActivity"
+            android:name=".DetailsActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

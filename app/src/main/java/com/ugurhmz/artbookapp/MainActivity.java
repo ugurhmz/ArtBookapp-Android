@@ -2,6 +2,7 @@ package com.ugurhmz.artbookapp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,7 +21,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
-    public ArrayList<Art> artArrayList;
+    ArrayList<Art> artList;
+
+    ArtAdapter artAdapter;
 
 
     @Override
@@ -30,35 +33,45 @@ public class MainActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
-        artArrayList = new ArrayList<>();
+        artList = new ArrayList<>();
+
+        binding.listRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        artAdapter = new ArtAdapter(artList);
+        binding.listRecyclerView.setAdapter(artAdapter);
+
+
+        getData();
 
     }
 
 
     // Get datas
-    private void getData(){
-            try {
+    public void getData() {
 
-                SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("ArtsDB",MODE_PRIVATE, null);
+        try {
+            SQLiteDatabase database = this.openOrCreateDatabase("ArtsDB",MODE_PRIVATE,null);
 
-                Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM arts", null);
-                int nameIx = cursor.getColumnIndex("art_name");
-                int idIx = cursor.getColumnIndex("id");
+            Cursor cursor = database.rawQuery("SELECT * FROM arts", null);
 
-                while(cursor.moveToNext()){
-                    String name = cursor.getString(nameIx);
-                    int id = cursor.getInt(idIx);
-                    Art art = new Art(id,name);
-                    artArrayList.add(art);
-                }
+            int idIx = cursor.getColumnIndex("id");
+            int nameIx = cursor.getColumnIndex("art_name");
 
-                cursor.close();
 
-            } catch (Exception  e) {
-                e.printStackTrace();
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(idIx);
+                String name = cursor.getString(nameIx);
+                Art art = new Art(name,id);
+                artList.add(art);
             }
-    }
+            artAdapter.notifyDataSetChanged();
 
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
 
 
 
@@ -76,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.add_art){           //itemin id'si == ise art_menu.xml içindeki itemin id'sine.
-            Intent intent = new Intent(MainActivity.this, ArtActivity.class);        // Mainactivity'den --> ArtActiviye git. tıklanınca
+            Intent intent = new Intent(MainActivity.this, DetailsActivity.class);        // Mainactivity'den --> ArtActiviye git. tıklanınca
+            intent.putExtra("info","new");
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);

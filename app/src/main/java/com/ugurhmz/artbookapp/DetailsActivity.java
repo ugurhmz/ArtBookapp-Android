@@ -12,9 +12,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
@@ -30,13 +32,14 @@ import com.ugurhmz.artbookapp.databinding.ActivityArtBinding;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class ArtActivity extends AppCompatActivity {
+public class DetailsActivity extends AppCompatActivity {
 
     Bitmap selectedImage;
+    SQLiteDatabase database;
     ActivityResultLauncher<Intent> activityResultLauncher;
     ActivityResultLauncher<String> permissionLauncher;
     private ActivityArtBinding binding;
-    SQLiteDatabase database;
+
 
 
 
@@ -48,6 +51,54 @@ public class ArtActivity extends AppCompatActivity {
         setContentView(view);
 
         registerLauncher();
+
+        database = this.openOrCreateDatabase("ArtsDB",MODE_PRIVATE,null);
+        Intent intent = getIntent();
+        String info = intent.getStringExtra("info");
+
+
+
+        if(info.matches("new")){
+            binding.nameText.setText("");
+            binding.artistText.setText("");
+            binding.yearText.setText("");
+            binding.saveBtn.setVisibility(View.VISIBLE);
+
+            Bitmap selectImage = BitmapFactory.decodeResource(getApplicationContext().getResources(),R.drawable.select_image);
+            binding.selectImage.setImageBitmap(selectImage);
+        }else {
+            int artId = intent.getIntExtra("artId",1);
+            binding.saveBtn.setVisibility(View.INVISIBLE);
+
+            try {
+
+                Cursor cursor = database.rawQuery("SELECT * FROM arts WHERE id = ?",new String[] {String.valueOf(artId)});
+
+                int artNameIx = cursor.getColumnIndex("art_name");
+                int painterNameIx = cursor.getColumnIndex("painter_name");
+                int yearIx = cursor.getColumnIndex("year");
+                int imageIx = cursor.getColumnIndex("image");
+
+                while (cursor.moveToNext()) {
+
+                    binding.nameText.setText(cursor.getString(artNameIx));
+                    binding.artistText.setText(cursor.getString(painterNameIx));
+                    binding.yearText.setText(cursor.getString(yearIx));
+
+                    byte[] bytes = cursor.getBlob(imageIx);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                    binding.selectImage.setImageBitmap(bitmap);
+
+
+                }
+
+                cursor.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 
@@ -90,7 +141,7 @@ public class ArtActivity extends AppCompatActivity {
         }
 
 
-        Intent intent = new Intent(ArtActivity.this, MainActivity.class);
+        Intent intent = new Intent(DetailsActivity.this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
 
@@ -156,12 +207,12 @@ public class ArtActivity extends AppCompatActivity {
                                 try {
 
                                     if (Build.VERSION.SDK_INT >= 28) {
-                                        ImageDecoder.Source source = ImageDecoder.createSource(ArtActivity.this.getContentResolver(),imageData);
+                                        ImageDecoder.Source source = ImageDecoder.createSource(DetailsActivity.this.getContentResolver(),imageData);
                                         selectedImage = ImageDecoder.decodeBitmap(source);
                                         binding.selectImage.setImageBitmap(selectedImage);
 
                                     } else {
-                                        selectedImage = MediaStore.Images.Media.getBitmap(ArtActivity.this.getContentResolver(),imageData);
+                                        selectedImage = MediaStore.Images.Media.getBitmap(DetailsActivity.this.getContentResolver(),imageData);
                                         binding.selectImage.setImageBitmap(selectedImage);
                                     }
 
@@ -187,7 +238,7 @@ public class ArtActivity extends AppCompatActivity {
 
                         } else {
                             //izin verilmedi
-                            Toast.makeText(ArtActivity.this,"Permisson needed!",Toast.LENGTH_LONG).show();
+                            Toast.makeText(DetailsActivity.this,"Permisson needed!",Toast.LENGTH_LONG).show();
                         }
                     }
 
