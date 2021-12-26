@@ -12,6 +12,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -34,6 +36,7 @@ public class ArtActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> activityResultLauncher;
     ActivityResultLauncher<String> permissionLauncher;
     private ActivityArtBinding binding;
+    SQLiteDatabase database;
 
 
 
@@ -60,6 +63,37 @@ public class ArtActivity extends AppCompatActivity {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         smallImage.compress(Bitmap.CompressFormat.PNG,50, outputStream);
         byte[] byteArray = outputStream.toByteArray();      // SQLite kaydedilecek, fotoyu 1001.. şekline çevirdik.
+
+
+        // DB'YE KAYDET
+        try {
+            database = this.openOrCreateDatabase("ArtsDB",MODE_PRIVATE, null);
+            database.execSQL("CREATE TABLE IF NOT EXISTS arts (" +
+                    "id INTEGER PRIMARY KEY, " +
+                    "art_name VARCHAR, " +
+                    "painter_name VARCHAR, " +
+                    "year VARCHAR," +
+                    "image BLOB) ");
+
+
+            String sqlString = "INSERT INTO arts (art_name, painter_name, year, image) VALUES(?,?,?,?)";
+            SQLiteStatement sqLiteStatement = database.compileStatement(sqlString);
+            sqLiteStatement.bindString(1, name);
+            sqLiteStatement.bindString(2, artistName);
+            sqLiteStatement.bindString(3, year);
+            sqLiteStatement.bindBlob(4, byteArray);
+
+            sqLiteStatement.execute();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        Intent intent = new Intent(ArtActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+
 
     }
 
