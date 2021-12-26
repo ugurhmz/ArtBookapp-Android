@@ -25,6 +25,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.ugurhmz.artbookapp.databinding.ActivityArtBinding;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class ArtActivity extends AppCompatActivity {
@@ -47,10 +48,44 @@ public class ArtActivity extends AppCompatActivity {
     }
 
 
+    // Save button
     public void saveClick(View view){
+
+        String name = binding.nameText.getText().toString();
+        String artistName = binding.artistText.getText().toString();
+        String year = binding.yearText.getText().toString();
+
+
+        Bitmap smallImage = makeSmallerImage(selectedImage,300);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        smallImage.compress(Bitmap.CompressFormat.PNG,50, outputStream);
+        byte[] byteArray = outputStream.toByteArray();      // SQLite kaydedilecek, fotoyu 1001.. şekline çevirdik.
 
     }
 
+
+    // Make smaller image
+    public Bitmap makeSmallerImage(Bitmap image, int maxSize){
+            int width = image.getWidth();
+            int height = image.getHeight();
+
+            float bitmapRatio = (float) width / (float) height;
+
+            if(bitmapRatio > 1){
+                    width = maxSize;
+                    height = (int) (width / bitmapRatio );
+
+            } else {
+                height = maxSize;
+                width = (int) ( height * bitmapRatio);
+            }
+
+            return image.createScaledBitmap(image, width, height, true);
+    }
+
+
+
+    // Click select image
     public void selectClickImage(View view) {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
